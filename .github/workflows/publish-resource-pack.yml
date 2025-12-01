@@ -1,0 +1,30 @@
+name: Publish Resource Pack
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-zip:
+    runs-on: ubuntu-latest
+    env:
+      # REPLACE THIS WITH YOUR REAL MODTALE RESOURCE PACK UUID
+      PROJECT_ID: "550e8400-e29b-41d4-a716-446655440000"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Zip Files
+        run: |
+          cd resource-pack
+          zip -r ../MyPack.zip ./*
+
+      - name: Upload to Modtale
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          
+          curl -X POST "https://modtale.net/api/v1/publish/$PROJECT_ID" \
+            -H "X-Api-Key: ${{ secrets.MODTALE_API_KEY }}" \
+            -F "file=@MyPack.zip" \
+            -F "versionNumber=$VERSION" \
+            -F "gameVersions=Release 1.0" \
+            -F "changelog=Released from GitHub Actions"
