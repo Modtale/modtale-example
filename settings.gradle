@@ -1,0 +1,5 @@
+rootProject.name = 'modtale-examples'
+
+// Include the Gradle-based subprojects so the root wrapper can manage them
+include 'gradle-plugin'
+include 'github-action-plugin'
