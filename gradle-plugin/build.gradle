@@ -19,30 +19,40 @@ jar {
 }
 
 // 2. Publish Task
-task publishToModtale(type: Exec) {
-    dependsOn build
+tasks.register("publishToModtale", Exec) {
+    group = "publishing"
+    description = "Publishes the built jar to Modtale.net."
 
-    // Inputs from Environment
-    def apiKey = System.getenv("MODTALE_KEY")
-    def projectId = System.getenv("MODTALE_PROJECT_ID")
+    dependsOn tasks.named("build")
 
-    // Locate the jar
-    def jarFile = layout.buildDirectory.file("libs/${project.name}-${project.version}.jar").get().asFile
+    def curlExe = org.gradle.internal.os.OperatingSystem.current().isWindows()
+            ? "C:/Windows/System32/curl.exe"
+            : "curl"
 
     doFirst {
+        def apiKey = System.getenv("MODTALE_KEY")
+        def projectId = System.getenv("MODTALE_PROJECT_ID")
+
+        def jarFile = layout.buildDirectory
+                .file("libs/${project.name}-${project.version}.jar")
+                .get().asFile
+
         if (!apiKey || !projectId) {
             throw new GradleException("Error: MODTALE_KEY and MODTALE_PROJECT_ID env vars are required.")
         }
         if (!jarFile.exists()) {
-            throw new GradleException("Error: Jar file not found at ${jarFile}")
+            throw new GradleException("Error: Jar file not found: ${jarFile}")
         }
-    }
 
-    // Curl Upload Command
-    commandLine 'curl', '-X', 'POST', "https://modtale.net/api/v1/publish/${projectId}",
-            '-H', "X-Api-Key: ${apiKey}",
-            '-F', "file=@${jarFile.absolutePath}",
-            '-F', "versionNumber=${project.version}",
-            '-F', "gameVersions=Release 1.0",
-            '-F', "changelog=Uploaded via Local Gradle Task"
+        commandLine(
+                curlExe, '-X', 'POST',
+                "https://modtale.net/api/v1/publish/${projectId}",
+                '-H', "X-Api-Key: ${apiKey}",
+                '-F', "file=@${jarFile.absolutePath}",
+                '-F', "versionNumber=${project.version}",
+                '-F', "gameVersions=Release 1.0",
+                '-F', "changelog=Uploaded via Local Gradle Task"
+        )
+    }
 }
+
