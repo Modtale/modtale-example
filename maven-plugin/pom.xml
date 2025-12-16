@@ -9,8 +9,8 @@
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -56,8 +56,8 @@
                                     <executable>curl</executable>
                                     <arguments>
                                         <argument>-X</argument><argument>POST</argument>
-                                        <argument>https://modtale.net/api/v1/publish/${env.MODTALE_PROJECT_ID}</argument>
-                                        <argument>-H</argument><argument>X-Api-Key: ${env.MODTALE_KEY}</argument>
+                                        <argument>https://modtale.net/api/projects/${env.MODTALE_PROJECT_ID}/versions</argument>
+                                        <argument>-H</argument><argument>X-MODTALE-KEY: ${env.MODTALE_KEY}</argument>
                                         <argument>-F</argument><argument>file=@${project.build.directory}/${project.artifactId}-${project.version}.jar</argument>
                                         <argument>-F</argument><argument>versionNumber=${project.version}</argument>
                                         <argument>-F</argument><argument>gameVersions=Release 1.0</argument>

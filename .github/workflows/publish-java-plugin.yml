@@ -32,15 +32,14 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/v}
           
           # 2. Find the built jar
-          # We use find because the jar name might vary based on build config
           JAR_PATH=$(find build/libs -name "*-plain.jar" -prune -o -name "*.jar" -print | head -n 1)
           
           echo "Found Jar: $JAR_PATH"
           echo "Publishing Version: $VERSION"
 
-          # 3. Upload
-          curl -X POST "https://modtale.net/api/v1/publish/$PROJECT_ID" \
-            -H "X-Api-Key: ${{ secrets.MODTALE_API_KEY }}" \
+          # 3. Upload to Unified API
+          curl -X POST "https://modtale.net/api/projects/$PROJECT_ID/versions" \
+            -H "X-MODTALE-KEY: ${{ secrets.MODTALE_API_KEY }}" \
             -F "file=@$JAR_PATH" \
             -F "versionNumber=$VERSION" \
             -F "gameVersions=Release 1.0" \

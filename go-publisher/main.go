@@ -18,7 +18,7 @@ func main() {
 	version := flag.String("version", "", "versionNumber field to send (default: jar base name)")
 	gameVersions := flag.String("gameVersions", "Release 1.0", "gameVersions form field")
 	changelog := flag.String("changelog", "Uploaded via Go publisher", "changelog form field")
-	endpoint := flag.String("endpoint", "https://modtale.net/api/v1/publish", "base API endpoint (will append project id)")
+	endpoint := flag.String("endpoint", "https://modtale.net/api/projects", "base API endpoint")
 	flag.Parse()
 
 	apiKey := os.Getenv("MODTALE_KEY")
@@ -73,15 +73,14 @@ func main() {
 		log.Fatalf("closing multipart writer: %v", err)
 	}
 
-	// Build request to endpoint/projectID
-	url := fmt.Sprintf("%s/%s", *endpoint, projectID)
+	url := fmt.Sprintf("%s/%s/versions", *endpoint, projectID)
 	req, err := http.NewRequest("POST", url, &body)
 	if err != nil {
 		log.Fatalf("NewRequest error: %v", err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("X-Api-Key", apiKey)
+	req.Header.Set("X-MODTALE-KEY", apiKey)
 
 	// do request
 	client := &http.Client{}
