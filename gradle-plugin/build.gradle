@@ -50,8 +50,13 @@ tasks.register("publishToModtale", Exec) {
                 '-H', "X-MODTALE-KEY: ${apiKey}",
                 '-F', "file=@${jarFile.absolutePath}",
                 '-F', "versionNumber=${project.version}",
+                // RELEASE | BETA | ALPHA   
+                '-F', "channel=RELEASE",
+                // Comma-separated list (Release 1.0, Release 1.1)
                 '-F', "gameVersions=Release 1.0",
+                // Markdown string
                 '-F', "changelog=Uploaded via Local Gradle Task"
         )
     }
 }
+
