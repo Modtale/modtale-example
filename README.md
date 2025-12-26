@@ -14,7 +14,7 @@
     <a href="https://modtale.net">
       <img src="https://img.shields.io/badge/Website-Modtale.net-3b82f6?style=for-the-badge&logo=hytale&logoColor=white" alt="Website" />
     </a>
-    <a href="https://modtale.net/docs/api">
+    <a href="https://modtale.net/api-docs">
       <img src="https://img.shields.io/badge/API-Documentation-1e293b?style=for-the-badge&logo=swagger&logoColor=white" alt="Docs" />
     </a>
   </p>
@@ -185,3 +185,4 @@ If no `--jar` is provided, the CLI automatically searches for
   <br>
   <p><i>Modtale is not affiliated with Hypixel Studios.</i></p>
 </div>
+
