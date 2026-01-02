@@ -22,9 +22,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           
-          # Updated Endpoint: /api/projects/{id}/versions
-          # Updated Header: X-MODTALE-KEY
-          curl -X POST "https://modtale.net/api/projects/$PROJECT_ID/versions" \
+          curl -X POST "https://modtale.net/api/v1/projects/$PROJECT_ID/versions" \
             -H "X-MODTALE-KEY: ${{ secrets.MODTALE_API_KEY }}" \
             -F "file=@MyPack.zip" \
             -F "versionNumber=$VERSION" \

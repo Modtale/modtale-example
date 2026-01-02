@@ -9,7 +9,6 @@ repositories {
     mavenCentral()
 }
 
-// 1. Create the Jar
 jar {
     manifest {
         attributes(
@@ -18,7 +17,6 @@ jar {
     }
 }
 
-// 2. Publish Task
 tasks.register("publishToModtale", Exec) {
     group = "publishing"
     description = "Publishes the built jar to Modtale.net."
@@ -46,7 +44,7 @@ tasks.register("publishToModtale", Exec) {
 
         commandLine(
                 curlExe, '-X', 'POST',
-                "https://modtale.net/api/projects/${projectId}/versions",
+                "https://modtale.net/api/v1/projects/${projectId}/versions",
                 '-H', "X-MODTALE-KEY: ${apiKey}",
                 '-F', "file=@${jarFile.absolutePath}",
                 '-F', "versionNumber=${project.version}",
