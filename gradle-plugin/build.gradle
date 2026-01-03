@@ -44,7 +44,7 @@ tasks.register("publishToModtale", Exec) {
 
         commandLine(
                 curlExe, '-X', 'POST',
-                "https://modtale.net/api/v1/projects/${projectId}/versions",
+                "https://api.modtale.net/api/v1/projects/${projectId}/versions",
                 '-H', "X-MODTALE-KEY: ${apiKey}",
                 '-F', "file=@${jarFile.absolutePath}",
                 '-F', "versionNumber=${project.version}",
@@ -57,4 +57,5 @@ tasks.register("publishToModtale", Exec) {
         )
     }
 }
+
 

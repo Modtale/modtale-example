@@ -37,7 +37,7 @@ jobs:
           echo "Found Jar: $JAR_PATH"
           echo "Publishing Version: $VERSION"
 
-          curl -X POST "https://modtale.net/api/v1/projects/$PROJECT_ID/versions" \
+          curl -X POST "https://api.modtale.net/api/v1/projects/$PROJECT_ID/versions" \
             -H "X-MODTALE-KEY: ${{ secrets.MODTALE_API_KEY }}" \
             -F "file=@$JAR_PATH" \
             -F "versionNumber=$VERSION" \

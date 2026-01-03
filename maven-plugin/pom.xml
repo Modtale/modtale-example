@@ -56,7 +56,7 @@
                                     <executable>curl</executable>
                                     <arguments>
                                         <argument>-X</argument><argument>POST</argument>
-                                        <argument>https://modtale.net/api/v1/projects/${env.MODTALE_PROJECT_ID}/versions</argument>
+                                        <argument>https://api.modtale.net/api/v1/projects/${env.MODTALE_PROJECT_ID}/versions</argument>
                                         <argument>-H</argument><argument>X-MODTALE-KEY: ${env.MODTALE_KEY}</argument>
                                         <argument>-F</argument><argument>file=@${project.build.directory}/${project.artifactId}-${project.version}.jar</argument>
                                         <argument>-F</argument><argument>versionNumber=${project.version}</argument>
@@ -71,4 +71,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>

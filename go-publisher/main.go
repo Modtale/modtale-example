@@ -18,7 +18,7 @@ func main() {
     version := flag.String("version", "", "versionNumber field to send (default: jar base name)")
     gameVersions := flag.String("gameVersions", "Release 1.0", "gameVersions form field")
     changelog := flag.String("changelog", "Uploaded via Go publisher", "changelog form field")
-    endpoint := flag.String("endpoint", "https://modtale.net/api/v1/projects", "base API endpoint")
+    endpoint := flag.String("endpoint", "https://api.modtale.net/api/v1/projects", "base API endpoint")
     flag.Parse()
 
     apiKey := os.Getenv("MODTALE_KEY")
@@ -96,4 +96,5 @@ func main() {
     } else {
        log.Fatalf("Upload failed. Status: %s\nResponse:\n%s\n", resp.Status, string(respBody))
     }
+
 }
