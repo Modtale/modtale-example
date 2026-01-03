@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://modtale.net">
-    <img src="mtale_f.svg" alt="Modtale Logo" width="850" height="132">
+    <img src="logo_light.svg" alt="Modtale Logo" width="850" height="132">
   </a>
 
   <h1 align="center">Modtale Publishing Examples</h1>
