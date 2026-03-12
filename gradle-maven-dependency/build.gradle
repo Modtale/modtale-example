@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+}
+
+group = 'net.example'
+version = '1.0.0'
+
+repositories {
+    // Modtale repository
+    // This uses Gradle's Ivy "artifact-only" repository support to resolve
+    // Modtale projects directly from their API download endpoint.
+    //
+    // Artifact pattern:
+    // https://api.modtale.net/api/v1/projects/<project>/versions/<version>/download
+    //
+    // <project> can be either the project slug or the project UUID.
+    // <version> is the Modtale version string.
+    exclusiveContent {
+        forRepository {
+            ivy {
+                name = "Modtale"
+                url = uri("https://api.modtale.net/api/v1")
+                patternLayout {
+                    artifact("projects/[module]/versions/[revision]/download")
+                }
+                metadataSources {
+                    artifact()
+                }
+            }
+        }
+        filter {
+            includeGroup("modtale")
+        }
+    }
+}
+
+dependencies {
+    // Modtale dependency format:
+    // modtale:<project-slug-or-uuid>:<version>@<extension>
+    //
+    // Version numbers can be found in the Modtale changelog or releases.
+    // If the version tag includes a leading "v" (e.g. v0.9.11), remove it.
+    //
+    // Example using a project slug:
+    implementation("modtale:levelingcore:0.9.11@jar")
+
+    // Example using a project UUID instead of the slug:
+    implementation("modtale:5e9bbea3-0d7f-4365-93df-5e7acfadf0e7:0.9.11@jar")
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'net.example.ExampleMod.java'
+        )
+    }
+}
+
+
+
