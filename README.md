@@ -44,6 +44,8 @@ Covered publishing features:
 
 New projects usually go through `submit` for review. Direct `publish` of a new project is an admin operation; project owners can use publish for eligible republish/restoration flows when they have the permission.
 
+For raw request examples, see [`api-recipes.md`](api-recipes.md). That file is intentionally just copy-paste HTTP recipes, not another publisher program.
+
 ---
 
 ## Authentication
@@ -276,6 +278,7 @@ For private or unlisted projects, set `MODTALE_KEY` or `MODTALE_API_KEY` with `P
 ```text
 .
 ├── .github/workflows/              # CI publishing examples
+├── api-recipes.md                  # Raw curl examples for the publishing API
 ├── go-publisher/                   # Comprehensive standard-library CLI
 ├── gradle-plugin/                  # Local Gradle publish task
 ├── gradle-maven-dependency/        # Signed-download Gradle consumption example
