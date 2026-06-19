@@ -84,12 +84,6 @@ tasks.register('publishToModtale') {
             args uploadArgs
         }
 
-        if (boolEnv('MODTALE_SUBMIT_AFTER_UPLOAD')) {
-            exec {
-                executable curlExe
-                args '-X', 'POST', "${apiUrl}/projects/${projectId}/submit", '-H', "X-MODTALE-KEY: ${apiKey}"
-            }
-        }
         if (boolEnv('MODTALE_PUBLISH_AFTER_UPLOAD')) {
             exec {
                 executable curlExe

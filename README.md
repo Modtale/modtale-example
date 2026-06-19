@@ -7,7 +7,7 @@
 
   <p align="center">
     <b>Reference publishing flows for the current Modtale API v1.</b><br>
-    Create drafts, sync metadata, upload releases, attach media, and submit projects from CI or local tooling.
+    Create drafts, sync metadata, upload releases, and attach media from CI or local tooling.
   </p>
 
   <p align="center">
@@ -38,11 +38,10 @@ Covered publishing features:
 - Upload versions with `POST /projects/{id}/versions`
 - Set optional version fields: `gameVersions`, `modIds`, `incompatibleProjectIds`, `channel`, `replaceExisting`, and `changelog`
 - Upload icon, banner, gallery images, and YouTube gallery entries
-- Submit projects for review with `POST /projects/{id}/submit`
 - Publish or republish projects with `POST /projects/{id}/publish`
 - Download artifacts through the current signed URL flow
 
-New projects usually go through `submit` for review. Direct `publish` of a new project is an admin operation; project owners can use publish for eligible republish/restoration flows when they have the permission.
+Direct `publish` of a new project is an admin operation; project owners can use publish for eligible republish/restoration flows when they have the permission.
 
 For raw request examples, see [`api-recipes.md`](api-recipes.md). That file is intentionally just copy-paste HTTP recipes, not another publisher program.
 
@@ -69,7 +68,7 @@ Useful project-scoped permissions:
 | Upload gallery image or YouTube gallery entry | `PROJECT_GALLERY_ADD` |
 | Upload a version or inspect dependencies | `VERSION_CREATE` |
 | Update an existing version's metadata | `VERSION_EDIT` |
-| Submit, revert, archive, unlist, publish | `PROJECT_STATUS_SUBMIT`, `PROJECT_STATUS_REVERT`, `PROJECT_STATUS_ARCHIVE`, `PROJECT_STATUS_UNLIST`, `PROJECT_STATUS_PUBLISH` |
+| Revert, archive, unlist, publish | `PROJECT_STATUS_REVERT`, `PROJECT_STATUS_ARCHIVE`, `PROJECT_STATUS_UNLIST`, `PROJECT_STATUS_PUBLISH` |
 
 ---
 
@@ -91,7 +90,6 @@ export MODTALE_API_URL="https://api.modtale.net/api/v1"
 export MODTALE_DEPENDENCIES="dependency-project-id:1.2.0:optional,embedded-project-id:3.0.0:embedded"
 export MODTALE_INCOMPATIBLE_PROJECTS="incompatible-project-id"
 export MODTALE_REPLACE_EXISTING="true"
-export MODTALE_SUBMIT_AFTER_UPLOAD="true"
 ```
 
 Dependency entries use:
@@ -144,7 +142,7 @@ go run . \
   --version 1.1.0
 ```
 
-Create a draft, sync metadata, upload media, then submit for review:
+Create a draft, sync metadata, upload media, then publish a version:
 
 ```bash
 go run . \
@@ -167,8 +165,7 @@ go run . \
   --gallery-image assets/screenshot.png \
   --gallery-youtube https://www.youtube.com/watch?v=dQw4w9WgXcQ \
   --file build/libs/example.jar \
-  --version 1.0.0 \
-  --submit
+  --version 1.0.0
 ```
 
 Use `--dry-run` to print requests without sending them.
@@ -197,7 +194,6 @@ MODTALE_CHANNEL
 MODTALE_DEPENDENCIES
 MODTALE_INCOMPATIBLE_PROJECTS
 MODTALE_REPLACE_EXISTING
-MODTALE_SUBMIT_AFTER_UPLOAD
 ```
 
 Both workflows run on GitHub Releases and also support manual `workflow_dispatch`. The Java workflow builds `gradle-plugin/`; the asset workflow zips `asset-pack/`.
@@ -225,7 +221,6 @@ Optional fields:
 export MODTALE_DEPENDENCIES="dependency-project-id:1.2.0:optional"
 export MODTALE_INCOMPATIBLE_PROJECTS="old-project-id"
 export MODTALE_REPLACE_EXISTING="true"
-export MODTALE_SUBMIT_AFTER_UPLOAD="true"
 ```
 
 ---

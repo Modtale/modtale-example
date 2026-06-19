@@ -139,16 +139,9 @@ curl --fail-with-body -X POST "$MODTALE_API_URL/projects/$MODTALE_PROJECT_ID/gal
   --data '{"videoUrl":"https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 ```
 
-## Submit Or Change Visibility
+## Change Visibility
 
-Draft projects normally move to review through `submit`.
-
-```bash
-curl --fail-with-body -X POST "$MODTALE_API_URL/projects/$MODTALE_PROJECT_ID/submit" \
-  -H "X-MODTALE-KEY: $MODTALE_KEY"
-```
-
-Existing projects can also be moved through lifecycle endpoints when the key has the matching permission:
+Existing projects can be moved through lifecycle endpoints when the key has the matching permission:
 
 ```bash
 curl --fail-with-body -X POST "$MODTALE_API_URL/projects/$MODTALE_PROJECT_ID/unlist" \

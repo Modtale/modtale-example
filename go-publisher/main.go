@@ -167,7 +167,6 @@ func main() {
 	versionID := flag.String("version-id", "", "Existing version ID to update with JSON metadata")
 	suggestDependencies := flag.Bool("suggest-dependencies", false, "Inspect the artifact manifest and print dependency suggestions before uploading")
 	useSuggestedDependencies := flag.Bool("use-suggested-dependencies", false, "Append manifest dependency suggestions to --dependency values")
-	submit := flag.Bool("submit", false, "Submit the project for review after publishing the version")
 	publish := flag.Bool("publish", false, "Publish or republish the project after uploading; new projects require admin approval")
 	dryRun := flag.Bool("dry-run", false, "Print the planned requests without sending them")
 
@@ -330,11 +329,6 @@ func main() {
 		fmt.Printf("Gallery video added: %s\n", videoURL)
 	}
 
-	if *submit {
-		requireAPIKey(client)
-		must(client.projectTransition(projectID, "submit"))
-		fmt.Println("Project submitted for review.")
-	}
 	if *publish {
 		requireAPIKey(client)
 		must(client.projectTransition(projectID, "publish"))
