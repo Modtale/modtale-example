@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.example</groupId>
@@ -9,9 +9,14 @@
     <packaging>jar</packaging>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <modtale.apiUrl>https://api.modtale.net/api/v1</modtale.apiUrl>
+        <modtale.gameVersions>2026.01.17-4b0f30090</modtale.gameVersions>
+        <modtale.channel>RELEASE</modtale.channel>
+        <modtale.replaceExisting>false</modtale.replaceExisting>
+        <modtale.changelog>Uploaded via Maven</modtale.changelog>
+        <modtale.key>${env.MODTALE_KEY}</modtale.key>
     </properties>
 
     <build>
@@ -19,12 +24,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.13.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.4.2</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -44,24 +49,34 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.3.0</version>
                         <executions>
                             <execution>
-                                <id>upload</id>
-                                <phase>deploy</phase>
+                                <id>upload-to-modtale</id>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
                                     <executable>curl</executable>
                                     <arguments>
-                                        <argument>-X</argument><argument>POST</argument>
-                                        <argument>https://api.modtale.net/api/v1/projects/${env.MODTALE_PROJECT_ID}/versions</argument>
-                                        <argument>-H</argument><argument>X-MODTALE-KEY: ${env.MODTALE_KEY}</argument>
-                                        <argument>-F</argument><argument>file=@${project.build.directory}/${project.artifactId}-${project.version}.jar</argument>
-                                        <argument>-F</argument><argument>versionNumber=${project.version}</argument>
-                                        <argument>-F</argument><argument>gameVersions=2026.01.17-4b0f30090</argument>
-                                        <argument>-F</argument><argument>changelog=Uploaded via Maven</argument>
+                                        <argument>-X</argument>
+                                        <argument>POST</argument>
+                                        <argument>${modtale.apiUrl}/projects/${env.MODTALE_PROJECT_ID}/versions</argument>
+                                        <argument>-H</argument>
+                                        <argument>X-MODTALE-KEY: ${modtale.key}</argument>
+                                        <argument>-F</argument>
+                                        <argument>file=@${project.build.directory}/${project.artifactId}-${project.version}.jar</argument>
+                                        <argument>-F</argument>
+                                        <argument>versionNumber=${project.version}</argument>
+                                        <argument>-F</argument>
+                                        <argument>gameVersions=${modtale.gameVersions}</argument>
+                                        <argument>-F</argument>
+                                        <argument>channel=${modtale.channel}</argument>
+                                        <argument>-F</argument>
+                                        <argument>replaceExisting=${modtale.replaceExisting}</argument>
+                                        <argument>-F</argument>
+                                        <argument>changelog=${modtale.changelog}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -71,6 +86,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>
-

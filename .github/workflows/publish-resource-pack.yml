@@ -1,30 +1,94 @@
 name: Publish Resource Pack
+
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version number to publish. Defaults to the ref name.
+        required: false
 
 jobs:
   publish-zip:
     runs-on: ubuntu-latest
     env:
-      # REPLACE THIS WITH YOUR REAL MODTALE RESOURCE PACK UUID
-      PROJECT_ID: "550e8400-e29b-41d4-a716-446655440000"
+      MODTALE_API_URL: ${{ vars.MODTALE_API_URL || 'https://api.modtale.net/api/v1' }}
+      MODTALE_PROJECT_ID: ${{ vars.MODTALE_PROJECT_ID || '550e8400-e29b-41d4-a716-446655440000' }}
+      MODTALE_GAME_VERSIONS: ${{ vars.MODTALE_GAME_VERSIONS || '2026.01.17-4b0f30090' }}
+      MODTALE_CHANNEL: ${{ vars.MODTALE_CHANNEL || 'RELEASE' }}
+      MODTALE_DEPENDENCIES: ${{ vars.MODTALE_DEPENDENCIES }}
+      MODTALE_INCOMPATIBLE_PROJECTS: ${{ vars.MODTALE_INCOMPATIBLE_PROJECTS }}
+      MODTALE_REPLACE_EXISTING: ${{ vars.MODTALE_REPLACE_EXISTING || 'false' }}
+      MODTALE_SUBMIT_AFTER_UPLOAD: ${{ vars.MODTALE_SUBMIT_AFTER_UPLOAD || 'false' }}
+      RELEASE_BODY: ${{ github.event.release.body }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+      VERSION_INPUT: ${{ inputs.version }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Zip Files
+      - name: Zip resource pack
+        shell: bash
         run: |
+          set -euo pipefail
           cd resource-pack
-          zip -r ../MyPack.zip ./*
+          zip -r "${RUNNER_TEMP}/modtale-resource-pack.zip" .
 
       - name: Upload to Modtale
+        shell: bash
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          
-          curl -X POST "https://api.modtale.net/api/v1/projects/$PROJECT_ID/versions" \
+          set -euo pipefail
+
+          if [[ -z "${MODTALE_PROJECT_ID}" || "${MODTALE_PROJECT_ID}" == "550e8400-e29b-41d4-a716-446655440000" ]]; then
+            echo "::error::Set the MODTALE_PROJECT_ID repository variable before publishing."
+            exit 1
+          fi
+
+          VERSION="${VERSION_INPUT:-${RELEASE_TAG:-${GITHUB_REF_NAME}}}"
+          VERSION="${VERSION#v}"
+          CHANGELOG_FILE="${RUNNER_TEMP}/modtale-changelog.md"
+
+          {
+            echo "Resource pack release from GitHub Actions."
+            if [[ -n "${RELEASE_BODY:-}" ]]; then
+              echo
+              printf '%s\n' "${RELEASE_BODY}"
+            fi
+          } > "${CHANGELOG_FILE}"
+
+          form=(
+            -F "file=@${RUNNER_TEMP}/modtale-resource-pack.zip"
+            -F "versionNumber=${VERSION}"
+            -F "channel=${MODTALE_CHANNEL}"
+            -F "changelog=<${CHANGELOG_FILE};type=text/markdown"
+          )
+
+          append_csv_field() {
+            local field="$1"
+            local csv="$2"
+            IFS=',' read -ra values <<< "${csv}"
+            for value in "${values[@]}"; do
+              value="$(echo "${value}" | xargs)"
+              if [[ -n "${value}" ]]; then
+                form+=(-F "${field}=${value}")
+              fi
+            done
+          }
+
+          append_csv_field "gameVersions" "${MODTALE_GAME_VERSIONS}"
+          append_csv_field "modIds" "${MODTALE_DEPENDENCIES:-}"
+          append_csv_field "incompatibleProjectIds" "${MODTALE_INCOMPATIBLE_PROJECTS:-}"
+
+          if [[ "${MODTALE_REPLACE_EXISTING,,}" == "true" ]]; then
+            form+=(-F "replaceExisting=true")
+          fi
+
+          curl --fail-with-body -X POST "${MODTALE_API_URL%/}/projects/${MODTALE_PROJECT_ID}/versions" \
             -H "X-MODTALE-KEY: ${{ secrets.MODTALE_API_KEY }}" \
-            -F "file=@MyPack.zip" \
-            -F "versionNumber=$VERSION" \
-            -F "gameVersions=2026.01.17-4b0f30090" \
-            -F "changelog=Released from GitHub Actions"
+            "${form[@]}"
+
+          if [[ "${MODTALE_SUBMIT_AFTER_UPLOAD,,}" == "true" ]]; then
+            curl --fail-with-body -X POST "${MODTALE_API_URL%/}/projects/${MODTALE_PROJECT_ID}/submit" \
+              -H "X-MODTALE-KEY: ${{ secrets.MODTALE_API_KEY }}"
+          fi

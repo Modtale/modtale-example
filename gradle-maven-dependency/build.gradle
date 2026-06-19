@@ -1,3 +1,7 @@
+import groovy.json.JsonSlurper
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
 plugins {
     id 'java'
 }
@@ -6,55 +10,88 @@ group = 'net.example'
 version = '1.0.0'
 
 repositories {
-    // Modtale repository
-    // This uses Gradle's Ivy "artifact-only" repository support to resolve
-    // Modtale projects directly from their API download endpoint.
-    //
-    // Artifact pattern:
-    // https://api.modtale.net/api/v1/projects/<project>/versions/<version>/download
-    //
-    // <project> can be either the project slug or the project UUID.
-    // <version> is the Modtale version string.
-    exclusiveContent {
-        forRepository {
-            ivy {
-                name = "Modtale"
-                url = uri("https://api.modtale.net/api/v1")
-                patternLayout {
-                    artifact("projects/[module]/versions/[revision]/download")
-                }
-                metadataSources {
-                    artifact()
-                }
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+def hasExplicitModtaleDependency = findProperty('modtale.project') != null || System.getenv('MODTALE_DEPENDENCY_PROJECT')
+def modtaleApiUrl = (findProperty('modtale.apiUrl') ?: System.getenv('MODTALE_API_URL') ?: 'https://api.modtale.net/api/v1').toString().replaceAll('/+$', '')
+def modtaleProject = (findProperty('modtale.project') ?: System.getenv('MODTALE_DEPENDENCY_PROJECT') ?: '').toString()
+def modtaleVersion = (findProperty('modtale.version') ?: System.getenv('MODTALE_DEPENDENCY_VERSION') ?: '').toString()
+def modtaleGameVersion = (findProperty('modtale.gameVersion') ?: System.getenv('MODTALE_DEPENDENCY_GAME_VERSION') ?: '').toString()
+def outputArtifact = layout.buildDirectory.file("modtale/${modtaleProject ?: 'project'}-${modtaleVersion ?: 'version'}.jar")
+
+def encode = { value ->
+    URLEncoder.encode(value.toString(), StandardCharsets.UTF_8.name())
+}
+
+tasks.register('downloadModtaleArtifact') {
+    group = 'modtale'
+    description = 'Fetches a signed Modtale download URL and downloads the artifact for local compilation.'
+
+    outputs.file(outputArtifact)
+
+    doLast {
+        if (!modtaleProject || !modtaleVersion) {
+            throw new GradleException('Set -Pmodtale.project and -Pmodtale.version, or MODTALE_DEPENDENCY_PROJECT and MODTALE_DEPENDENCY_VERSION.')
+        }
+
+        def query = modtaleGameVersion ? "?gameVersion=${encode(modtaleGameVersion)}" : ''
+        def downloadUrlEndpoint = "${modtaleApiUrl}/projects/${encode(modtaleProject)}/versions/${encode(modtaleVersion)}/download-url${query}"
+        def apiKey = System.getenv('MODTALE_KEY') ?: System.getenv('MODTALE_API_KEY')
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(downloadUrlEndpoint).openConnection()
+        connection.setRequestMethod('GET')
+        if (apiKey) {
+            connection.setRequestProperty('X-MODTALE-KEY', apiKey)
+        }
+
+        if (connection.responseCode < 200 || connection.responseCode >= 300) {
+            def errorBody = connection.errorStream != null ? connection.errorStream.text : ''
+            throw new GradleException("Modtale download-url request failed: HTTP ${connection.responseCode}\n${errorBody}")
+        }
+
+        def payload = new JsonSlurper().parse(connection.inputStream)
+        def signedPath = payload.downloadUrl?.toString()
+        if (!signedPath) {
+            throw new GradleException('Modtale did not return a downloadUrl.')
+        }
+
+        def signedUrl = signedPath.startsWith('http') ? signedPath : "${modtaleApiUrl}${signedPath.startsWith('/') ? '' : '/'}${signedPath}"
+        def target = outputArtifact.get().asFile
+        target.parentFile.mkdirs()
+        new URL(signedUrl).withInputStream { input ->
+            target.withOutputStream { output ->
+                output << input
             }
         }
-        filter {
-            includeGroup("modtale")
-        }
+        logger.lifecycle("Downloaded Modtale artifact to ${target}")
+    }
+}
+
+tasks.named('compileJava') {
+    if (hasExplicitModtaleDependency) {
+        dependsOn tasks.named('downloadModtaleArtifact')
     }
 }
 
 dependencies {
-    // Modtale dependency format:
-    // modtale:<project-slug-or-uuid>:<version>@<extension>
-    //
-    // Version numbers can be found in the Modtale changelog or releases.
-    // If the version tag includes a leading "v" (e.g. v0.9.11), remove it.
-    //
-    // Example using a project slug:
-    implementation("modtale:levelingcore:0.9.11@jar")
-
-    // Example using a project UUID instead of the slug:
-    implementation("modtale:5e9bbea3-0d7f-4365-93df-5e7acfadf0e7:0.9.11@jar")
+    // Current Modtale API v1 returns short-lived signed download URLs instead of
+    // serving artifacts from a stable Maven/Ivy repository path.
+    if (hasExplicitModtaleDependency) {
+        implementation files(outputArtifact)
+    }
 }
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'net.example.ExampleMod.java'
+                'Main-Class': 'net.example.DependencyConsumer'
         )
     }
 }
-
-
-

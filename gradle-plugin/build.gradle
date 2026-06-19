@@ -9,54 +9,92 @@ repositories {
     mavenCentral()
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 jar {
     manifest {
         attributes(
-                'Main-Class': 'net.example.ExampleMod.java'
+                'Main-Class': 'net.example.ExampleMod'
         )
     }
 }
 
-tasks.register("publishToModtale", Exec) {
-    group = "publishing"
-    description = "Publishes the built jar to Modtale.net."
+def csv = { value ->
+    (value ?: '')
+            .split(',')
+            .collect { it.trim() }
+            .findAll { !it.isEmpty() }
+}
 
-    dependsOn tasks.named("build")
+def boolEnv = { name ->
+    ['1', 'true', 'yes', 'on'].contains((System.getenv(name) ?: '').trim().toLowerCase())
+}
 
-    def curlExe = org.gradle.internal.os.OperatingSystem.current().isWindows()
-            ? "C:/Windows/System32/curl.exe"
-            : "curl"
+def curlExe = org.gradle.internal.os.OperatingSystem.current().isWindows()
+        ? 'C:/Windows/System32/curl.exe'
+        : 'curl'
 
-    doFirst {
-        def apiKey = System.getenv("MODTALE_KEY")
-        def projectId = System.getenv("MODTALE_PROJECT_ID")
+tasks.register('publishToModtale') {
+    group = 'publishing'
+    description = 'Builds this project and publishes the artifact to Modtale API v1.'
 
-        def jarFile = layout.buildDirectory
-                .file("libs/${project.name}-${project.version}.jar")
-                .get().asFile
+    dependsOn tasks.named('build')
+
+    doLast {
+        def apiKey = System.getenv('MODTALE_KEY') ?: System.getenv('MODTALE_API_KEY')
+        def projectId = System.getenv('MODTALE_PROJECT_ID')
+        def apiUrl = (System.getenv('MODTALE_API_URL') ?: 'https://api.modtale.net/api/v1').replaceAll('/+$', '')
+        def jarFile = tasks.named('jar').get().archiveFile.get().asFile
+        def versionNumber = System.getenv('MODTALE_VERSION') ?: project.version.toString()
+        def gameVersions = csv(System.getenv('MODTALE_GAME_VERSIONS') ?: '2026.01.17-4b0f30090')
+        def dependencies = csv(System.getenv('MODTALE_DEPENDENCIES'))
+        def incompatibleProjects = csv(System.getenv('MODTALE_INCOMPATIBLE_PROJECTS'))
+        def channel = (System.getenv('MODTALE_CHANNEL') ?: 'RELEASE').trim().toUpperCase()
+        def changelog = System.getenv('MODTALE_CHANGELOG') ?: "Uploaded ${versionNumber} via Gradle"
 
         if (!apiKey || !projectId) {
-            throw new GradleException("Error: MODTALE_KEY and MODTALE_PROJECT_ID env vars are required.")
+            throw new GradleException('MODTALE_KEY or MODTALE_API_KEY and MODTALE_PROJECT_ID are required.')
         }
         if (!jarFile.exists()) {
-            throw new GradleException("Error: Jar file not found: ${jarFile}")
+            throw new GradleException("Jar file not found: ${jarFile}")
         }
 
-        commandLine(
-                curlExe, '-X', 'POST',
-                "https://api.modtale.net/api/v1/projects/${projectId}/versions",
+        def uploadArgs = [
+                '-X', 'POST',
+                "${apiUrl}/projects/${projectId}/versions",
                 '-H', "X-MODTALE-KEY: ${apiKey}",
                 '-F', "file=@${jarFile.absolutePath}",
-                '-F', "versionNumber=${project.version}",
-                // RELEASE | BETA | ALPHA   
-                '-F', "channel=RELEASE",
-                // Comma-separated list (2026.01.13-dcad8778f, 2026.01.17-4b0f30090)
-                '-F', "gameVersions=2026.01.17-4b0f30090",
-                // Markdown string
-                '-F', "changelog=Uploaded via Local Gradle Task"
-        )
+                '-F', "versionNumber=${versionNumber}",
+                '-F', "channel=${channel}",
+                '-F', "changelog=${changelog}"
+        ]
+        gameVersions.each { uploadArgs += ['-F', "gameVersions=${it}"] }
+        dependencies.each { uploadArgs += ['-F', "modIds=${it}"] }
+        incompatibleProjects.each { uploadArgs += ['-F', "incompatibleProjectIds=${it}"] }
+        if (boolEnv('MODTALE_REPLACE_EXISTING')) {
+            uploadArgs += ['-F', 'replaceExisting=true']
+        }
+
+        exec {
+            executable curlExe
+            args uploadArgs
+        }
+
+        if (boolEnv('MODTALE_SUBMIT_AFTER_UPLOAD')) {
+            exec {
+                executable curlExe
+                args '-X', 'POST', "${apiUrl}/projects/${projectId}/submit", '-H', "X-MODTALE-KEY: ${apiKey}"
+            }
+        }
+        if (boolEnv('MODTALE_PUBLISH_AFTER_UPLOAD')) {
+            exec {
+                executable curlExe
+                args '-X', 'POST', "${apiUrl}/projects/${projectId}/publish", '-H', "X-MODTALE-KEY: ${apiKey}"
+            }
+        }
     }
 }
-
-
-
