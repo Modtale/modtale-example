@@ -180,7 +180,7 @@ Use `--dry-run` to print requests without sending them.
 Locations:
 
 - `.github/workflows/publish-java-plugin.yml`
-- `.github/workflows/publish-resource-pack.yml`
+- `.github/workflows/publish-asset-pack.yml`
 
 Repository secret:
 
@@ -200,7 +200,7 @@ MODTALE_REPLACE_EXISTING
 MODTALE_SUBMIT_AFTER_UPLOAD
 ```
 
-Both workflows run on GitHub Releases and also support manual `workflow_dispatch`. The Java workflow builds `gradle-plugin/`; the resource workflow zips `resource-pack/`.
+Both workflows run on GitHub Releases and also support manual `workflow_dispatch`. The Java workflow builds `gradle-plugin/`; the asset workflow zips `asset-pack/`.
 
 ---
 
@@ -283,7 +283,7 @@ For private or unlisted projects, set `MODTALE_KEY` or `MODTALE_API_KEY` with `P
 ├── gradle-plugin/                  # Local Gradle publish task
 ├── gradle-maven-dependency/        # Signed-download Gradle consumption example
 ├── maven-plugin/                   # Maven publish profile
-└── resource-pack/                  # Folder zipped by the resource-pack workflow
+└── asset-pack/                     # Folder zipped by the asset-pack workflow
 ```
 
 ---

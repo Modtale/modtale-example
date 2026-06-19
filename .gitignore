@@ -46,5 +46,5 @@
 !maven-plugin/src/main/java/net/example/
 !maven-plugin/src/main/java/net/example/*.java
 
-!resource-pack/
-!resource-pack/README.md
+!asset-pack/
+!asset-pack/README.md

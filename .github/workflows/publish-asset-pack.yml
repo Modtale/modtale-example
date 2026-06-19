@@ -1,4 +1,4 @@
-name: Publish Resource Pack
+name: Publish Asset Pack
 
 on:
   release:
@@ -28,12 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Zip resource pack
+      - name: Zip asset pack
         shell: bash
         run: |
           set -euo pipefail
-          cd resource-pack
-          zip -r "${RUNNER_TEMP}/modtale-resource-pack.zip" .
+          cd asset-pack
+          zip -r "${RUNNER_TEMP}/modtale-asset-pack.zip" .
 
       - name: Upload to Modtale
         shell: bash
@@ -50,7 +50,7 @@ jobs:
           CHANGELOG_FILE="${RUNNER_TEMP}/modtale-changelog.md"
 
           {
-            echo "Resource pack release from GitHub Actions."
+            echo "Asset pack release from GitHub Actions."
             if [[ -n "${RELEASE_BODY:-}" ]]; then
               echo
               printf '%s\n' "${RELEASE_BODY}"
@@ -58,7 +58,7 @@ jobs:
           } > "${CHANGELOG_FILE}"
 
           form=(
-            -F "file=@${RUNNER_TEMP}/modtale-resource-pack.zip"
+            -F "file=@${RUNNER_TEMP}/modtale-asset-pack.zip"
             -F "versionNumber=${VERSION}"
             -F "channel=${MODTALE_CHANNEL}"
             -F "changelog=<${CHANGELOG_FILE};type=text/markdown"
